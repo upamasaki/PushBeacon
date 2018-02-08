@@ -1,0 +1,4 @@
+<resources>
+    <!-- Base application theme. -->
+    <string name="app_name">PushBeacon</string>
+</resources>

@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="univ.apu.tani.pushbeacon.MainActivity">
+
+    <LinearLayout
+        android:id="@+id/info_layout"
+        android:layout_width="110dp"
+        android:layout_height="170dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintHorizontal_bias="0.12"
+        app:layout_constraintVertical_bias="1.0"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:fontFamily="casual"
+            android:gravity="bottom|center"
+            android:text="Beacon Info"
+            android:textAlignment="center"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/DistanceText"
+            android:layout_width="match_parent"
+            android:layout_height="23dp"
+            android:layout_weight="1"
+            android:fontFamily="casual"
+            android:gravity="center_vertical"
+            android:hapticFeedbackEnabled="false"
+            android:text="Distance"
+            android:textColor="@color/colorAccent"
+            android:visibility="visible" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="23dp"
+            android:layout_weight="2.4"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/TxPowerText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:fontFamily="casual"
+                android:gravity="center_vertical"
+                android:hapticFeedbackEnabled="false"
+                android:text="TxPower"
+                android:textColor="@color/colorAccent"
+                android:visibility="visible" />
+
+            <EditText
+                android:id="@+id/editText_txpower"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:fontFamily="casual"
+                android:inputType="number"
+                android:text="0"
+                android:textAlignment="textEnd"
+                android:textSize="14sp"
+                android:visibility="visible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/RSSIText"
+            android:layout_width="match_parent"
+            android:layout_height="23dp"
+            android:layout_weight="1"
+            android:fontFamily="casual"
+            android:gravity="center_vertical"
+            android:text="RSSI"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/MinorText"
+            android:layout_width="match_parent"
+            android:layout_height="23dp"
+            android:layout_weight="1"
+            android:fontFamily="casual"
+            android:gravity="center_vertical"
+            android:text="minor"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/MajorText"
+            android:layout_width="match_parent"
+            android:layout_height="23dp"
+            android:layout_weight="1"
+            android:fontFamily="casual"
+            android:gravity="center_vertical"
+            android:text="major"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/PowerIcon"
+        android:layout_width="307dp"
+        android:layout_height="168dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.511"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.445"
+        app:srcCompat="@drawable/power3"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <TextView
+        android:id="@+id/MyTraffic"
+        android:layout_width="201dp"
+        android:layout_height="88dp"
+        android:fontFamily="casual"
+        android:gravity="center_vertical"
+        android:text="My Traffic"
+        android:textAlignment="center"
+        android:textSize="24sp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintVertical_bias="0.007"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <ImageView
+        android:id="@+id/imageView4"
+        android:layout_width="0dp"
+        android:layout_height="7dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.081"
+        app:srcCompat="@drawable/line" />
+
+    <ImageView
+        android:id="@+id/imageView5"
+        android:layout_width="122dp"
+        android:layout_height="93dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.989"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.007"
+        app:srcCompat="@drawable/my_traffic_icon_4" />
+
+    <TextView
+        android:id="@+id/Start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="casual"
+        android:text="Start"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintVertical_bias="0.636"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <Button
+        android:id="@+id/buttonPower"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="200dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@null"
+        android:text=" "
+        android:onClick="onClickBlue"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.444"
+        app:layout_constraintHorizontal_bias="0.0"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <LinearLayout
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:orientation="vertical"
+        android:id="@+id/rssi_Parameters_list"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.937"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.852">
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:fontFamily="casual"
+            android:gravity="bottom|center"
+            android:text="RSSI Parameters"
+            android:textAlignment="center"
+            android:textSize="10sp"
+            android:visibility="visible" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="29dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:fontFamily="casual"
+                android:text="Yellow"
+                android:textAlignment="center" />
+
+            <EditText
+                android:id="@+id/YellowEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:fontFamily="casual"
+                android:inputType="number"
+                android:text="-100" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="29dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:fontFamily="casual"
+                android:text="Red"
+                android:textAlignment="center" />
+
+            <EditText
+                android:id="@+id/RedEditText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:fontFamily="casual"
+                android:inputType="number"
+                android:text="-78" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="225dp"
+        android:layout_height="43dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="8dp"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintVertical_bias="1.0">
+
+        <ToggleButton
+            android:id="@+id/toggleButton2"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/background_light"
+            android:checked="false"
+            android:fontFamily="casual"
+            android:text="G"
+            android:textColor="@color/colorAccent"  />
+
+
+        <Button
+            android:id="@+id/s_button"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/background_light"
+            android:fontFamily="casual"
+            android:text="S"
+            android:onClick="Sound_Play"
+            android:textSize="14sp"/>
+
+        <Button
+            android:id="@+id/w_button"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/background_light"
+            android:fontFamily="casual"
+            android:onClick="Data_Write"
+            android:text="W"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/r_button"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/background_light"
+            android:fontFamily="casual"
+            android:onClick="Data_Read"
+            android:text="R"
+            android:textSize="14sp" />
+
+        <ToggleButton
+            android:id="@+id/toggleButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/background_light"
+            android:checked="false"
+            android:fontFamily="casual"
+            android:text="SET"
+            android:textColor="@color/colorAccent" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/traffic_img"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="80dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@drawable/yellow_0" />
+
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/chart1"
+        android:layout_width="907dp"
+        android:layout_height="613dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="111dp"
+        app:layout_constraintHorizontal_bias="0.428" />
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/chart2"
+        android:layout_width="894dp"
+        android:layout_height="234dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="135dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintVertical_bias="0.709" />
+
+    <TextView
+        android:id="@+id/timeTextView"
+        android:layout_width="88dp"
+        android:layout_height="15dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Processing"
+
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.971"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <LinearLayout
+        android:id="@+id/Plot_LIST"
+        android:layout_width="0dp"
+        android:layout_height="145dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="0.2"
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.13">
+
+        <ToggleButton
+            android:id="@+id/toggleButton3"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_weight="0.2"
+            android:background="@android:color/background_light"
+            android:checked="false"
+            android:fontFamily="casual"
+            android:text="LINE LIST"
+            android:textColor="@color/colorAccent" />
+
+        <CheckBox
+            android:id="@+id/checkBox_all_ave"
+            style="@android:style/Widget.Holo.CompoundButton.CheckBox"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_weight="0.2"
+            android:fontFamily="casual"
+            android:text="All Data Average" />
+
+        <CheckBox
+            android:id="@+id/checkBox_3data"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_weight="0.2"
+            android:fontFamily="casual"
+            android:text="3 Data Average" />
+
+        <CheckBox
+            android:id="@+id/checkBox_diff"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_weight="0.2"
+            android:fontFamily="casual"
+            android:text="Data Diff" />
+
+        <CheckBox
+            android:id="@+id/checkBox_moving"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_weight="0.2"
+            android:fontFamily="casual"
+            android:text="5 Data Moving Average" />
+
+
+    </LinearLayout>
+
+
+</android.support.constraint.ConstraintLayout>
