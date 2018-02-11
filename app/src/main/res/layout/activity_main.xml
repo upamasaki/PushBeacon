@@ -230,7 +230,7 @@
 
     <LinearLayout
         android:layout_width="110dp"
-        android:layout_height="110dp"
+        android:layout_height="190dp"
         android:orientation="vertical"
         android:id="@+id/rssi_Parameters_list"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -240,16 +240,43 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.852">
 
+
+
         <TextView
             android:id="@+id/textView3"
             android:layout_width="match_parent"
-            android:layout_height="24dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:fontFamily="casual"
             android:gravity="bottom|center"
             android:text="RSSI Parameters"
             android:textAlignment="center"
             android:textSize="10sp"
             android:visibility="visible" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView20"
+                android:layout_width="29dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:fontFamily="casual"
+                android:text="Target"
+                android:textAlignment="center" />
+
+            <EditText
+                android:id="@+id/target_Text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:fontFamily="casual"
+                android:inputType="number"
+                android:text="-100" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -299,6 +326,7 @@
                 android:fontFamily="casual"
                 android:inputType="number"
                 android:text="-78" />
+
         </LinearLayout>
     </LinearLayout>
 

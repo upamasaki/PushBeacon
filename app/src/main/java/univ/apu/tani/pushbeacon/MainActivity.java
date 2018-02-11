@@ -1,6 +1,8 @@
 package univ.apu.tani.pushbeacon;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
@@ -21,8 +23,10 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -74,8 +78,12 @@ import com.github.mikephil.charting.data.LineDataSet;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -91,12 +99,29 @@ import java.util.List;
 //import static org.assertj.core.api.Assertions.assertThat;
 import univ.apu.tani.pushbeacon.R.id;
 
+import static android.R.attr.data;
 import static android.R.attr.value;
+import static android.os.Environment.getExternalStorageDirectory;
 import static android.os.SystemClock.sleep;
 
 @SuppressLint("NewApi")
 public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener {
 //public class MainActivity extends AppCompatActivity {
+
+
+
+    /* data get */
+
+    final Calendar calendar = Calendar.getInstance();
+
+    final int year = calendar.get(Calendar.YEAR);
+    final int month = calendar.get(Calendar.MONTH);
+    final int day = calendar.get(Calendar.DAY_OF_MONTH);
+    final int hour = calendar.get(Calendar.HOUR_OF_DAY);
+    final int minute = calendar.get(Calendar.MINUTE);
+    final int second = calendar.get(Calendar.SECOND);
+    final int ms = calendar.get(Calendar.MILLISECOND);
+
 
     /*--------------------------- Init  Setting  ---------------------------*/
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
@@ -147,10 +172,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     String major;
     String minor;
 
-
-    int int_uuid;
-    int int_major ;
-    int int_minor ;
     int int_rssi;
     int Pre_Rssi=0;    int Pre2_Rssi=0;
     int Now_Rssi=0;
@@ -184,7 +205,11 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     /* 　++++++++++ 処理時間の計測方法  　++++++++++ */
     private long startTime;
+    private long Pre_startTime;
     private long stopTime;
+
+    private long startTime_loop_out;
+    private long stopTime_loop_out;
     TextView timeTextView;
     private long interval_time_average=0;
     private long time_Box=0;
@@ -205,9 +230,39 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     String[] names = new String[]{"x-value", "y-value", "z-value"};
     int[] colors = new int[]{Color.RED, Color.GREEN, Color.BLUE};
 
+
+    // Android 6.0ではアクセス権限の処理が改められたため、
+    // 上記のuses-permissionは通用しません。Nexus 7をAndroid 6.0にアップグレードしているのなら、
+    // MainActivityに下記のような処理を追加します
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+    public static void verifyStoragePermissions(Activity activity) {
+    // Check if we have read or write permission
+        int writePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int readPermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE);
+
+        if (writePermission != PackageManager.PERMISSION_GRANTED || readPermission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
+
+
+
     /** Called when the activity is first created. */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
+        // 画面にこのアプリに権限を与えることを許可するか問うダイアログが出るので、
+        // 許可すれば書き込みができます。（最初の1回だけ）
+        verifyStoragePermissions(this);
 
 
         super.onCreate(savedInstanceState);
@@ -650,6 +705,38 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             Log.i(TAG, " Major  " + Integer.parseInt(major) + "," + Integer.parseInt(minor));
 
 
+            // time section calc
+            stopTime_loop_out = System.currentTimeMillis();
+            Log.i(TAG, "Time_loop_in:" + String.valueOf(startTime_loop_out)+ "  Time_loop_out:" +  String.valueOf(stopTime_loop_out) + " Interval:" + String.valueOf(startTime_loop_out-stopTime_loop_out));
+
+
+
+            File path = getFilesDir();
+            File path2 = getExternalStorageDirectory();
+            Log.i(TAG, "PATH:" + getFilesDir());
+            Log.i(TAG, "PATH:" + getExternalStorageDirectory());
+            // Writing data +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            OutputStream out;
+            try {
+                out = openFileOutput("out_put"
+                        + String.valueOf(month)   + String.valueOf(day)  + String.valueOf(hour) + String.valueOf(minute)  + String.valueOf(second)
+                        + "beacon.txt",MODE_PRIVATE|MODE_APPEND);
+                PrintWriter writer = new PrintWriter(new OutputStreamWriter(out,"UTF-8"));
+
+                //追記する
+                String write_value= String.valueOf(startTime_loop_out) + " , " +String.valueOf(stopTime_loop_out) + "," + String.valueOf(startTime_loop_out-stopTime_loop_out)
+                        +  String.valueOf(Pre_startTime) + " , " +String.valueOf(stopTime) + "," + String.valueOf(Pre_startTime-stopTime) + "\n";
+                writer.append(write_value);
+                //writer.append("write");
+                writer.close();
+                Log.i(TAG, " Writing Data  ");
+            } catch (IOException e) {
+                // TODO 自動生成された catch ブロック
+                e.printStackTrace();
+            }
+            startTime_loop_out = System.currentTimeMillis();
+
+
             if ((Integer.parseInt(major) == 700 || Integer.parseInt(minor) == 494) || (Integer.parseInt(major) == 6 && Integer.parseInt(minor) == 512) || (Integer.parseInt(major) == 512 && Integer.parseInt(minor) == 6) ) {
             //if(true){
                 // 距離の計算
@@ -736,7 +823,9 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                 }
                 count++;
                 Log.i(TAG, " interbal " + (float)interval_time_average/1000);
+                Pre_startTime = startTime;
                 startTime = System.currentTimeMillis();
+                Log.i(TAG, "Time_loop_out  " + String.valueOf((startTime - stopTime)/1000));
 
 
 
