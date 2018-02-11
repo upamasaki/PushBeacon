@@ -112,6 +112,9 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     /* data get */
 
+
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
     final Calendar calendar = Calendar.getInstance();
 
     final int year = calendar.get(Calendar.YEAR);
