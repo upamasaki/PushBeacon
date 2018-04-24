@@ -18,6 +18,10 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.drawable.AnimationDrawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -95,6 +99,60 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+/* google spread seet ----------------------------------------- */
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.ExponentialBackOff;
+
+import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.*;
+
+import android.Manifest;
+import android.accounts.AccountManager;
+import android.app.Activity;
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
+
+
+import java.net.URL;
+import java.util.List;
+
+
+
+import android.os.AsyncTask;
+import android.widget.EditText;
+
 
 //import static org.assertj.core.api.Assertions.assertThat;
 import univ.apu.tani.pushbeacon.R.id;
@@ -105,8 +163,12 @@ import static android.os.Environment.getExternalStorageDirectory;
 import static android.os.SystemClock.sleep;
 
 @SuppressLint("NewApi")
-public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener {
+public class MainActivity extends AppCompatActivity implements
+        CompoundButton.OnCheckedChangeListener ,
+        SensorEventListener,
+        EasyPermissions.PermissionCallbacks{
 //public class MainActivity extends AppCompatActivity {
+
 
 
 
@@ -114,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
 
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+     //*************************************************************
     final Calendar calendar = Calendar.getInstance();
 
     final int year = calendar.get(Calendar.YEAR);
@@ -124,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     final int minute = calendar.get(Calendar.MINUTE);
     final int second = calendar.get(Calendar.SECOND);
     final int ms = calendar.get(Calendar.MILLISECOND);
-
+    String data_text =  String.valueOf(month)   + String.valueOf(day)  + String.valueOf(hour) + String.valueOf(minute)  + String.valueOf(second);
 
     /*--------------------------- Init  Setting  ---------------------------*/
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
@@ -145,6 +207,9 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     TextView MinorTextView ;
     TextView MajorTextView ;
 
+    TextView Target_number_TextView ;
+    int Target_number;
+    int IN_COUNT = 0;
     //EditText editText ;
 
     /*------------------ Sound Info -----------------------------------------*/
@@ -217,8 +282,22 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private long interval_time_average=0;
     private long time_Box=0;
 
+    int first_writing_flag = 0;
+
+    public int spread_sheets_flag = ON;
+
+    private TextView mOutputText;
+
+    // Accelerometer
+    private SensorManager sensorManager_Accelerometer;
+    private TextView textView_Accelerometer, textInfo; // Accelerometer view
+    public float sensorX_Accelerometer=0, sensorY_Accelerometer=0, sensorZ_Accelerometer=0;
 
     /*----------------------------------------------------------------------*/
+
+
+
+
     // MyAsyncTask task;
     EditText editText ;
     String text="";
@@ -255,6 +334,26 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             );
         }
     }
+
+
+    // google spread sheet ----------------------------------------
+
+    GoogleAccountCredential mCredential;
+    //private TextView //mOutputText;
+    private Button mCallApiButton;
+    ProgressDialog mProgress;
+
+    static final int REQUEST_ACCOUNT_PICKER = 1000;
+    static final int REQUEST_AUTHORIZATION = 1001;
+    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
+    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+
+    private static final String BUTTON_TEXT = "Call Google Sheets API";
+    private static final String PREF_ACCOUNT_NAME = "accountName";
+    private static final String[] SCOPES = { SheetsScopes.SPREADSHEETS_READONLY };
+
+    // -----------------------------------------------------------
+
 
 
 
@@ -425,7 +524,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         mChart.setPinchZoom(true);
 
         // set an alternative background color
-        mChart.setBackgroundColor(Color.argb(255,252,250,252));
+        mChart.setBackgroundColor(Color.argb(255, 252, 250, 252));
 
         LineData data = new LineData();
         data.setValueTextColor(Color.BLACK);
@@ -465,7 +564,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         mChart2.setPinchZoom(true);
 
         // set an alternative background color
-        mChart2.setBackgroundColor(Color.argb(255,252,250,252));
+        mChart2.setBackgroundColor(Color.argb(255, 252, 250, 252));
 
         LineData data2 = new LineData();
         data2.setValueTextColor(Color.BLACK);
@@ -493,6 +592,78 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         rightAxis2.setEnabled(false);
 
 
+        //
+        // Get an instance of the SensorManager
+        sensorManager_Accelerometer = (SensorManager) getSystemService(SENSOR_SERVICE);
+        // Get an instance of the TextView
+        textView_Accelerometer = (TextView) findViewById(R.id.TextView_Accelerometer);
+
+
+        // google spread sheet
+        mProgress = new ProgressDialog(this);
+        mProgress.setMessage("Calling Google Sheets API ...");
+        // Initialize credentials and service object.
+        mCredential = GoogleAccountCredential.usingOAuth2(
+                getApplicationContext(), Arrays.asList(SCOPES))
+                .setBackOff(new ExponentialBackOff());
+
+
+        Output_log(data_text, data_text_Get() + "," + "[success] onCreate");
+
+
+        // *********
+        // =================================================================================
+        // google spread sheet botton and layout
+        if (true) {
+            if(false) {
+                LinearLayout activityLayout = new LinearLayout(this);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT);
+                activityLayout.setLayoutParams(lp);
+                activityLayout.setOrientation(LinearLayout.VERTICAL);
+                activityLayout.setPadding(16, 16, 16, 16);
+            }
+            LinearLayout activityLayout = (LinearLayout) findViewById(id.Conlayout);
+
+            if(false) {
+                ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+            }
+
+            mCallApiButton = new Button(this);
+            mCallApiButton.setText(BUTTON_TEXT);
+            mCallApiButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mCallApiButton.setEnabled(false);
+                    mOutputText.setText("");
+                    getResultsFromApi();
+                    mCallApiButton.setEnabled(true);
+                }
+            });
+            activityLayout.addView(mCallApiButton);
+
+            mOutputText = new TextView(this);
+            //mOutputText.setLayoutParams(tlp);
+            mOutputText.setPadding(16, 16, 16, 16);
+            mOutputText.setVerticalScrollBarEnabled(true);
+            mOutputText.setMovementMethod(new ScrollingMovementMethod());
+            mOutputText.setText(
+                    "Click the \'" + BUTTON_TEXT + "\' button to test the API.");
+            activityLayout.addView(mOutputText);
+
+            mProgress = new ProgressDialog(this);
+            mProgress.setMessage("Calling Google Sheets API ...");
+
+            setContentView(activityLayout);
+
+            // Initialize credentials and service object.
+            mCredential = GoogleAccountCredential.usingOAuth2(
+                    getApplicationContext(), Arrays.asList(SCOPES))
+                    .setBackOff(new ExponentialBackOff());
+        }
     }
 
     public void bluetooth_init(){
@@ -527,6 +698,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             }
         }
         Log.i(TAG, " Android M Permission check end");
+        Output_log(data_text,data_text_Get() + "," + "[success] bluetooth_init");
     }
 
     /*--------------------------- Bluetooth のボタンクリック処理  ---------------------------*/
@@ -607,6 +779,13 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         startBLEScan();
 
 
+        // Listenerの登録
+        Sensor sensor_Accelerometer = sensorManager_Accelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        sensorManager_Accelerometer.registerListener(this, sensor_Accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        //sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_FASTEST);
+        //sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_GAME);
+        //sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_UI);
 
 
     }
@@ -622,10 +801,14 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         mSoundPool.unload(mSoundId[0]);
         mSoundPool.unload(mSoundId[1]);
         mSoundPool.release();
+
+
+        // Listenerを解除
+        sensorManager_Accelerometer.unregisterListener(this);
     }
 
     private void initScanCallback() {
-        Log.i(TAG, " initScanCallback() in funcution ;");
+        Log.i(TAG, "+++++++++++  initScanCallback() in funcution ;");
         _scanCallback = new ScanCallback() {
             @Override
             public void onBatchScanResults(List<ScanResult> results) {
@@ -705,31 +888,58 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                 intFlag = false;
             }
 
-            Log.i(TAG, " Major  " + Integer.parseInt(major) + "," + Integer.parseInt(minor));
+            //Log.i(TAG, " Major  " + Integer.parseInt(major) + "," + Integer.parseInt(minor));
 
 
             // time section calc
             stopTime_loop_out = System.currentTimeMillis();
             Log.i(TAG, "Time_loop_in:" + String.valueOf(startTime_loop_out)+ "  Time_loop_out:" +  String.valueOf(stopTime_loop_out) + " Interval:" + String.valueOf(startTime_loop_out-stopTime_loop_out));
 
-
-
-            File path = getFilesDir();
-            File path2 = getExternalStorageDirectory();
+            //File path = getFilesDir();
+            //File path2 = getExternalStorageDirectory();
             Log.i(TAG, "PATH:" + getFilesDir());
-            Log.i(TAG, "PATH:" + getExternalStorageDirectory());
+            //Log.i(TAG, "PATH:" + getExternalStorageDirectory());
             // Writing data +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             OutputStream out;
             try {
-                out = openFileOutput("out_put"
+                out = openFileOutput("out_put_"
                         + String.valueOf(month)   + String.valueOf(day)  + String.valueOf(hour) + String.valueOf(minute)  + String.valueOf(second)
                         + "beacon.txt",MODE_PRIVATE|MODE_APPEND);
                 PrintWriter writer = new PrintWriter(new OutputStreamWriter(out,"UTF-8"));
 
-                //追記する
-                String write_value= String.valueOf(startTime_loop_out) + " , " +String.valueOf(stopTime_loop_out) + "," + String.valueOf(startTime_loop_out-stopTime_loop_out)
-                        +  String.valueOf(Pre_startTime) + " , " +String.valueOf(stopTime) + "," + String.valueOf(Pre_startTime-stopTime) + "\n";
-                writer.append(write_value);
+                //追記する ++++++
+
+                if(first_writing_flag==0){
+                    // first writing
+                    String write_value= "start_time" + " , "
+                            + "end_time" + ","
+                            + "respons_time" + ","
+                            + "Pre_start_time" + ","
+                            + "stop_time" + ","
+                            + "Pre_startTime_stopTime" + ","
+                            + "rssi" + ","
+                            + "sensorX_Accelerometer" + ","
+                            + "sensorY_Accelerometer" + ","
+                            + "sensorZ_Accelerometer" + ","
+                            + "\n";
+                    writer.append(write_value);
+                    first_writing_flag = 1;
+                }else{
+                    // writing
+                    String write_value= String.valueOf(startTime_loop_out) + " , "
+                            + String.valueOf(stopTime_loop_out) + ","
+                            + String.valueOf(startTime_loop_out-stopTime_loop_out) + ","
+                            + String.valueOf(Pre_startTime) + " , "
+                            + String.valueOf(stopTime) + ","
+                            + String.valueOf(Pre_startTime-stopTime) + ","
+                            + String.valueOf(rssi)  + ","
+                            + String.valueOf(sensorX_Accelerometer)  + ","
+                            + String.valueOf(sensorY_Accelerometer)  + ","
+                            + String.valueOf(sensorZ_Accelerometer)  + ","
+                            + "\n";
+                    writer.append(write_value);
+
+                }
                 //writer.append("write");
                 writer.close();
                 Log.i(TAG, " Writing Data  ");
@@ -739,8 +949,10 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             }
             startTime_loop_out = System.currentTimeMillis();
 
-
-            if ((Integer.parseInt(major) == 700 || Integer.parseInt(minor) == 494) || (Integer.parseInt(major) == 6 && Integer.parseInt(minor) == 512) || (Integer.parseInt(major) == 512 && Integer.parseInt(minor) == 6) ) {
+            Target_number_TextView = (EditText) findViewById(id.target_Text);
+            Target_number = Integer.parseInt(Target_number_TextView.getText().toString());// Int
+            //if ((Integer.parseInt(major) == 700 || Integer.parseInt(minor) == 494) || (Integer.parseInt(major) == 6 && Integer.parseInt(minor) == 512) || (Integer.parseInt(major) == 512 && Integer.parseInt(minor) == 6) ) {
+            if (Integer.parseInt(major) == Target_number ) {
             //if(true){
                 // 距離の計算
                 beacon_distance = Math.pow(10,((-0-rssi)/20));
@@ -851,13 +1063,14 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
 
                 if (set == null) {
+                    // Legend
                     set = new LineDataSet(null, "Beacon"); //  解説
                     set_yellow = new LineDataSet(null, "Y"); //  解説
                     set_red = new LineDataSet(null, "R"); //  解説
                     set_ave = new LineDataSet(null, "Ave"); //  解説
                     set_double = new LineDataSet(null, "Ave2"); //  解説
                     rssi_diff = new LineDataSet(null, "Diff"); //  解説
-                    rssi_correct = new LineDataSet(null, "Correct"); //  解説
+                    rssi_correct = new LineDataSet(null, "Moving Average"); //  解説
 
                     set.setColor(Color.GRAY);
                     set_yellow.setColor(Color.argb(255,255,204,0));
@@ -990,9 +1203,18 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
                 }
                 //}
+                IN_COUNT=0;
+            }else {
+                IN_COUNT++;
+                if (IN_COUNT > 10){
+                    ((ImageView) findViewById(id.traffic_img)).setImageResource(R.drawable.blue_3);
+                }
             }
+
+
             // ※ここはUIスレッドではないので、実際画面に表示する場合は注意して下さい。
         }
+        Log.i(TAG, "Loop END POINT  ");
     }
 
     private String getUUID(byte[] scanRecord) {
@@ -1310,4 +1532,396 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     public void Graph_Create(View view) {
 
     }
+
+
+
+
+    //  Sensor Accelerometer Function
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        //float sensorX_Accelerometer=0, sensorY_Accelerometer=0, sensorZ_Accelerometer=0;
+        float sensorX_Accelerometer2, sensorY_Accelerometer2, sensorZ_Accelerometer2;
+
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            sensorX_Accelerometer = event.values[0];
+            sensorY_Accelerometer = event.values[1];
+            sensorZ_Accelerometer = event.values[2];
+
+            String strTmp = "加速度センサー 2\n"
+                    + " X: " + sensorX_Accelerometer + "\n"
+                    + " Y: " + sensorY_Accelerometer + "\n"
+                    + " Z: " + sensorZ_Accelerometer;
+            textView_Accelerometer.setText(strTmp);
+            //Log.i(TAG, "X: " + sensorX_Accelerometer2);
+            //Log.i(TAG, "Y: " + sensorY_Accelerometer2);
+            //Log.i(TAG, "Z: " + sensorZ_Accelerometer2);
+            //showInfo(event);
+        }
+    }
+
+
+    private void Output_log(String data_text,String output_text){
+            OutputStream Output_Stream_log;
+            try {
+                Output_Stream_log = openFileOutput("log_" + data_text,MODE_PRIVATE|MODE_APPEND);
+                PrintWriter writer_log = new PrintWriter(new OutputStreamWriter(Output_Stream_log,"UTF-8"));
+
+                //追記する
+                writer_log.append(output_text);
+                writer_log.close();
+            } catch (IOException e) {
+                // TODO 自動生成された catch ブロック;
+                e.printStackTrace();
+            }
+    }
+
+    public  String data_text_Get(){
+
+        final Calendar calendar = Calendar.getInstance();
+
+        final int year = calendar.get(Calendar.YEAR);
+        final int month = calendar.get(Calendar.MONTH);
+        final int day = calendar.get(Calendar.DAY_OF_MONTH);
+        final int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        final int minute = calendar.get(Calendar.MINUTE);
+        final int second = calendar.get(Calendar.SECOND);
+        final int ms = calendar.get(Calendar.MILLISECOND);
+        String data_text =  String.valueOf(month)   + String.valueOf(day)  + String.valueOf(hour) + String.valueOf(minute)  + String.valueOf(second);
+
+        return data_text;
+
+    }
+
+    // ======================================================================================
+    // ======================================================================================
+    // ここからGoogle Spread Sheet
+    // ======================================================================================
+    // ======================================================================================
+
+    /**
+     * Attempt to call the API, after verifying that all the preconditions are
+     * satisfied. The preconditions are: Google Play Services installed, an
+     * account was selected and the device currently has online access. If any
+     * of the preconditions are not satisfied, the app will prompt the user as
+     * appropriate.
+     */
+
+    private void getResultsFromApi() {
+        if (! isGooglePlayServicesAvailable()) {
+            acquireGooglePlayServices();
+        } else if (mCredential.getSelectedAccountName() == null) {
+            chooseAccount();
+        } else if (! isDeviceOnline()) {
+            mOutputText.setText("No network connection available.");
+        } else {
+            new MakeRequestTask(mCredential).execute();
+        }
+    }
+
+    /**
+     * Attempts to set the account used with the API credentials. If an account
+     * name was previously saved it will use that one; otherwise an account
+     * picker dialog will be shown to the user. Note that the setting the
+     * account to use with the credentials object requires the app to have the
+     * GET_ACCOUNTS permission, which is requested here if it is not already
+     * present. The AfterPermissionGranted annotation indicates that this
+     * function will be rerun automatically whenever the GET_ACCOUNTS permission
+     * is granted.
+     */
+    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
+    private void chooseAccount() {
+        if (EasyPermissions.hasPermissions(
+                this, Manifest.permission.GET_ACCOUNTS)) {
+            String accountName = getPreferences(Context.MODE_PRIVATE)
+                    .getString(PREF_ACCOUNT_NAME, null);
+            if (accountName != null) {
+                mCredential.setSelectedAccountName(accountName);
+                getResultsFromApi();
+            } else {
+                // Start a dialog from which the user can choose an account
+                startActivityForResult(
+                        mCredential.newChooseAccountIntent(),
+                        REQUEST_ACCOUNT_PICKER);
+            }
+        } else {
+            // Request the GET_ACCOUNTS permission via a user dialog
+            EasyPermissions.requestPermissions(
+                    this,
+                    "This app needs to access your Google account (via Contacts).",
+                    REQUEST_PERMISSION_GET_ACCOUNTS,
+                    Manifest.permission.GET_ACCOUNTS);
+        }
+    }
+
+    /**
+     * Called when an activity launched here (specifically, AccountPicker
+     * and authorization) exits, giving you the requestCode you started it with,
+     * the resultCode it returned, and any additional data from it.
+     * @param requestCode code indicating which activity result is incoming.
+     * @param resultCode code indicating the result of the incoming
+     *     activity result.
+     * @param data Intent (containing result data) returned by incoming
+     *     activity result.
+     */
+    @Override
+    protected void onActivityResult(
+            int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch(requestCode) {
+            case REQUEST_GOOGLE_PLAY_SERVICES:
+                if (resultCode != RESULT_OK) {
+                    mOutputText.setText(
+                            "This app requires Google Play Services. Please install " +
+                                    "Google Play Services on your device and relaunch this app.");
+                } else {
+                    getResultsFromApi();
+                }
+                break;
+            case REQUEST_ACCOUNT_PICKER:
+                if (resultCode == RESULT_OK && data != null &&
+                        data.getExtras() != null) {
+                    String accountName =
+                            data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                    if (accountName != null) {
+                        SharedPreferences settings =
+                                getPreferences(Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = settings.edit();
+                        editor.putString(PREF_ACCOUNT_NAME, accountName);
+                        editor.apply();
+                        mCredential.setSelectedAccountName(accountName);
+                        getResultsFromApi();
+                    }
+                }
+                break;
+            case REQUEST_AUTHORIZATION:
+                if (resultCode == RESULT_OK) {
+                    getResultsFromApi();
+                }
+                break;
+        }
+    }
+
+    /**
+     * Respond to requests for permissions at runtime for API 23 and above.
+     * @param requestCode The request code passed in
+     *     requestPermissions(android.app.Activity, String, int, String[])
+     * @param permissions The requested permissions. Never null.
+     * @param grantResults The grant results for the corresponding permissions
+     *     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(
+                requestCode, permissions, grantResults, this);
+    }
+
+    /**
+     * Callback for when a permission is granted using the EasyPermissions
+     * library.
+     * @param requestCode The request code associated with the requested
+     *         permission
+     * @param list The requested permission list. Never null.
+     */
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> list) {
+        // Do nothing.
+    }
+
+    /**
+     * Callback for when a permission is denied using the EasyPermissions
+     * library.
+     * @param requestCode The request code associated with the requested
+     *         permission
+     * @param list The requested permission list. Never null.
+     */
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> list) {
+        // Do nothing.
+    }
+
+    /**
+     * Checks whether the device currently has a network connection.
+     * @return true if the device has a network connection, false otherwise.
+     */
+    private boolean isDeviceOnline() {
+        ConnectivityManager connMgr =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        return (networkInfo != null && networkInfo.isConnected());
+    }
+
+    /**
+     * Check that Google Play services APK is installed and up to date.
+     * @return true if Google Play Services is available and up to
+     *     date on this device; false otherwise.
+     */
+    private boolean isGooglePlayServicesAvailable() {
+        GoogleApiAvailability apiAvailability =
+                GoogleApiAvailability.getInstance();
+        final int connectionStatusCode =
+                apiAvailability.isGooglePlayServicesAvailable(this);
+        return connectionStatusCode == ConnectionResult.SUCCESS;
+    }
+
+    /**
+     * Attempt to resolve a missing, out-of-date, invalid or disabled Google
+     * Play Services installation via a user dialog, if possible.
+     */
+    private void acquireGooglePlayServices() {
+        GoogleApiAvailability apiAvailability =
+                GoogleApiAvailability.getInstance();
+        final int connectionStatusCode =
+                apiAvailability.isGooglePlayServicesAvailable(this);
+        if (apiAvailability.isUserResolvableError(connectionStatusCode)) {
+            showGooglePlayServicesAvailabilityErrorDialog(connectionStatusCode);
+        }
+    }
+
+
+    /**
+     * Display an error dialog showing that Google Play Services is missing
+     * or out of date.
+     * @param connectionStatusCode code describing the presence (or lack of)
+     *     Google Play Services on this device.
+     */
+    void showGooglePlayServicesAvailabilityErrorDialog(
+            final int connectionStatusCode) {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        Dialog dialog = apiAvailability.getErrorDialog(
+                MainActivity.this,
+                connectionStatusCode,
+                REQUEST_GOOGLE_PLAY_SERVICES);
+        dialog.show();
+    }
+
+    /**
+     * An asynchronous task that handles the Google Sheets API call.
+     * Placing the API calls in their own task ensures the UI stays responsive.
+     */
+    private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
+        private com.google.api.services.sheets.v4.Sheets mService = null;
+        private Exception mLastError = null;
+
+        MakeRequestTask(GoogleAccountCredential credential) {
+            HttpTransport transport = AndroidHttp.newCompatibleTransport();
+            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+            mService = new com.google.api.services.sheets.v4.Sheets.Builder(
+                    transport, jsonFactory, credential)
+                    .setApplicationName("Google Sheets API Android Quickstart")
+                    .build();
+        }
+
+        /**
+         * Background task to call Google Sheets API.
+         * @param params no parameters needed for this task.
+         */
+        @Override
+        protected List<String> doInBackground(Void... params) {
+            try {
+
+                putDataFromApi(); //ボタンを押した時に反応させるために追記
+                return getDataFromApi();
+            } catch (Exception e) {
+                mLastError = e;
+                cancel(true);
+                return null;
+            }
+        }
+
+        /**
+         * データを書き込むメソッド
+         * @throws IOException
+         */
+        public void putDataFromApi() throws IOException {
+            String spreadsheetId = "1e02_BHu1UFczMyK3p7viq7PxE1GEoxt1qOxc11uFhW0";
+            String range = "s1!A2:E2";
+            ValueRange valueRange = new ValueRange();
+            List row = new ArrayList<>();
+            List col = Arrays.asList("This", "is", "test", "test");
+            row.add(col);
+            valueRange.setValues(row);
+            valueRange.setRange(range);
+            this.mService.spreadsheets().values()
+                    .update(spreadsheetId, range, valueRange)
+                    .setValueInputOption("RAW")//.setValueInputOption("USER_ENTERED")
+                    .execute();
+        }
+
+        /**
+         * Fetch a list of names and majors of students in a sample spreadsheet:
+         * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+         *
+         * @return List of names and majors
+         * @throws IOException
+         */
+        private List<String> getDataFromApi() throws IOException {
+            String spreadsheetId = "1e02_BHu1UFczMyK3p7viq7PxE1GEoxt1qOxc11uFhW0";
+            String range = "s1!A1:E1";
+            List<String> results = new ArrayList<String>();
+            ValueRange response = this.mService.spreadsheets().values()
+                    .get(spreadsheetId, range)
+                    .execute();
+            List<List<Object>> values = response.getValues();
+            if (values != null) {
+                results.add("Name, Major");
+                for (List row : values) {
+                    results.add(row.get(0) + ", " + row.get(4));
+                }
+            }
+            return results;
+        }
+
+
+
+
+        @Override
+        protected void onPreExecute() {
+            mOutputText.setText("");
+            mProgress.show();
+        }
+
+        @Override
+        protected void onPostExecute(List<String> output) {
+            mProgress.hide();
+            if (output == null || output.size() == 0) {
+                mOutputText.setText("No results returned.");
+            } else {
+                output.add(0, "Data retrieved using the Google Sheets API:");
+                mOutputText.setText(TextUtils.join("\n", output));
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            mProgress.hide();
+            if (mLastError != null) {
+                if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
+                    showGooglePlayServicesAvailabilityErrorDialog(
+                            ((GooglePlayServicesAvailabilityIOException) mLastError)
+                                    .getConnectionStatusCode());
+                } else if (mLastError instanceof UserRecoverableAuthIOException) {
+                    startActivityForResult(
+                            ((UserRecoverableAuthIOException) mLastError).getIntent(),
+                            MainActivity.REQUEST_AUTHORIZATION);
+                } else {
+                    mOutputText.setText("The following error occurred:\n"
+                            + mLastError.getMessage());
+                }
+            } else {
+                mOutputText.setText("Request cancelled.");
+            }
+        }
+    }
+
+
+
+
 }

@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "univ.apu.tani.pushbeacon"
         minSdkVersion 15
@@ -29,7 +29,28 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.github.PhilJay:MPAndroidChart:v2.1.5'
     testCompile 'junit:junit:4.12'
+    // ここから下を追加 need google spred sheets
+   //compile 'com.google.android.gms:play-services-auth:9.0.2'
+    compile 'pub.devrel:easypermissions:0.1.5'
+    compile('com.google.api-client:google-api-client-android:1.22.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    compile('com.google.apis:google-api-services-sheets:v4-rev10-1.22.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    //implementation files('libs/gdata-client-1.0.jar')
+    //implementation files('libs/gdata-spreadsheet-1.0.jar')
+
+    // com.google.android.gms.common.AccountPicker とかで必要
+    //compile 'com.google.android.gms:play-services:3.1.36+'
+
+    // Drive API ( http://code.google.com/p/google-api-java-client/wiki/APIs#Drive_API )
+    compile 'com.google.apis:google-api-services-drive:v2-rev96-1.16.0-rc'
+    compile 'com.google.http-client:google-http-client-gson:1.16.0-rc'
+    compile 'com.google.api-client:google-api-client-android:1.16.0-rc'
+    compile 'com.google.android.gms:play-services-auth:10.2.6'
 }
+
 
 allprojects {
     repositories {
