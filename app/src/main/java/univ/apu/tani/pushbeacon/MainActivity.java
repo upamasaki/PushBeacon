@@ -11,10 +11,13 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.drawable.AnimationDrawable;
@@ -83,6 +86,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -162,6 +166,8 @@ import static android.R.attr.value;
 import static android.os.Environment.getExternalStorageDirectory;
 import static android.os.SystemClock.sleep;
 
+
+
 @SuppressLint("NewApi")
 public class MainActivity extends AppCompatActivity implements
         CompoundButton.OnCheckedChangeListener ,
@@ -177,16 +183,7 @@ public class MainActivity extends AppCompatActivity implements
 
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
      //*************************************************************
-    final Calendar calendar = Calendar.getInstance();
 
-    final int year = calendar.get(Calendar.YEAR);
-    final int month = calendar.get(Calendar.MONTH);
-    final int day = calendar.get(Calendar.DAY_OF_MONTH);
-    final int hour = calendar.get(Calendar.HOUR_OF_DAY);
-    final int minute = calendar.get(Calendar.MINUTE);
-    final int second = calendar.get(Calendar.SECOND);
-    final int ms = calendar.get(Calendar.MILLISECOND);
-    String data_text =  String.valueOf(month)   + String.valueOf(day)  + String.valueOf(hour) + String.valueOf(minute)  + String.valueOf(second);
 
     /*--------------------------- Init  Setting  ---------------------------*/
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
@@ -282,7 +279,7 @@ public class MainActivity extends AppCompatActivity implements
     private long interval_time_average=0;
     private long time_Box=0;
 
-    int first_writing_flag = 0;
+    int first_writing_flag = -1;
 
     public int spread_sheets_flag = ON;
 
@@ -290,12 +287,19 @@ public class MainActivity extends AppCompatActivity implements
 
     // Accelerometer
     private SensorManager sensorManager_Accelerometer;
-    private TextView textView_Accelerometer, textInfo; // Accelerometer view
+    private TextView textView_Accelerometer,textView_MAGNETIC_FIELD, textInfo; // Accelerometer view
     public float sensorX_Accelerometer=0, sensorY_Accelerometer=0, sensorZ_Accelerometer=0;
-
+    public float sensorX_MAGNETIC_FIELD=0, sensorY_MAGNETIC_FIELD=0, sensorZ_MAGNETIC_FIELD=0;
     /*----------------------------------------------------------------------*/
-
-
+    Calendar calendar = Calendar.getInstance();
+    int year = calendar.get(Calendar.YEAR);
+    int month = calendar.get(Calendar.MONTH);
+    int day = calendar.get(Calendar.DAY_OF_MONTH);
+    int hour = calendar.get(Calendar.HOUR_OF_DAY);
+    int minute = calendar.get(Calendar.MINUTE);
+    int second = calendar.get(Calendar.SECOND);
+    int ms = calendar.get(Calendar.MILLISECOND);
+    String data_text;
 
 
     // MyAsyncTask task;
@@ -321,6 +325,13 @@ public class MainActivity extends AppCompatActivity implements
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
+
+
+
+
+
+
+
     public static void verifyStoragePermissions(Activity activity) {
     // Check if we have read or write permission
         int writePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -597,7 +608,7 @@ public class MainActivity extends AppCompatActivity implements
         sensorManager_Accelerometer = (SensorManager) getSystemService(SENSOR_SERVICE);
         // Get an instance of the TextView
         textView_Accelerometer = (TextView) findViewById(R.id.TextView_Accelerometer);
-
+        textView_MAGNETIC_FIELD = (TextView) findViewById(R.id.textView_MAGNETIC_FIELD);
 
         // google spread sheet
         mProgress = new ProgressDialog(this);
@@ -614,8 +625,9 @@ public class MainActivity extends AppCompatActivity implements
         // *********
         // =================================================================================
         // google spread sheet botton and layout
+        /*
         if (true) {
-            if(false) {
+            if (false) {
                 LinearLayout activityLayout = new LinearLayout(this);
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -624,46 +636,57 @@ public class MainActivity extends AppCompatActivity implements
                 activityLayout.setOrientation(LinearLayout.VERTICAL);
                 activityLayout.setPadding(16, 16, 16, 16);
             }
-            LinearLayout activityLayout = (LinearLayout) findViewById(id.Conlayout);
+            //LinearLayout activityLayout = (LinearLayout) findViewById(R.id.Conlayout);
 
-            if(false) {
+            if (false) {
                 ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT);
             }
 
-            mCallApiButton = new Button(this);
-            mCallApiButton.setText(BUTTON_TEXT);
-            mCallApiButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mCallApiButton.setEnabled(false);
-                    mOutputText.setText("");
-                    getResultsFromApi();
-                    mCallApiButton.setEnabled(true);
-                }
-            });
-            activityLayout.addView(mCallApiButton);
+            if (true) {
+                //mCallApiButton = new Button(this);
+                mCallApiButton = (Button) findViewById(id.spread_button);
+                mCallApiButton.setText(BUTTON_TEXT);
+                mCallApiButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mCallApiButton.setEnabled(false);
+                        mOutputText.setText("");
+                        getResultsFromApi();
+                        mCallApiButton.setEnabled(true);
+                    }
+                });
+            }
 
-            mOutputText = new TextView(this);
-            //mOutputText.setLayoutParams(tlp);
-            mOutputText.setPadding(16, 16, 16, 16);
-            mOutputText.setVerticalScrollBarEnabled(true);
-            mOutputText.setMovementMethod(new ScrollingMovementMethod());
-            mOutputText.setText(
-                    "Click the \'" + BUTTON_TEXT + "\' button to test the API.");
-            activityLayout.addView(mOutputText);
+            //activityLayout.addView(mCallApiButton);
 
-            mProgress = new ProgressDialog(this);
-            mProgress.setMessage("Calling Google Sheets API ...");
+            boolean text_view_flag = true;
+            if(text_view_flag) {
+                //mOutputText = new TextView(this);
+                mOutputText = (TextView) findViewById(id.Start);
+                //mOutputText.setLayoutParams(tlp);
+                mOutputText.setPadding(16, 16, 16, 16);
+                mOutputText.setVerticalScrollBarEnabled(true);
+                mOutputText.setMovementMethod(new ScrollingMovementMethod());
+                //mOutputText.setText("Click the \'" + BUTTON_TEXT + "\' button to test the API.");
+                mOutputText.setText("Spread");
+                //activityLayout.addView(mOutputText);
+            }
 
-            setContentView(activityLayout);
+            if(true) {
+                mProgress = new ProgressDialog(this);
+                mProgress.setMessage("Calling Google Sheets API ...");
+            }
 
-            // Initialize credentials and service object.
-            mCredential = GoogleAccountCredential.usingOAuth2(
-                    getApplicationContext(), Arrays.asList(SCOPES))
-                    .setBackOff(new ExponentialBackOff());
-        }
+            //setContentView(activityLayout);
+            if(true) {
+                // Initialize credentials and service object.
+                mCredential = GoogleAccountCredential.usingOAuth2(
+                        getApplicationContext(), Arrays.asList(SCOPES))
+                        .setBackOff(new ExponentialBackOff());
+            }
+        }*/
     }
 
     public void bluetooth_init(){
@@ -781,8 +804,11 @@ public class MainActivity extends AppCompatActivity implements
 
         // Listenerの登録
         Sensor sensor_Accelerometer = sensorManager_Accelerometer.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        Sensor sensor_MAGNETIC_FIELD = sensorManager_Accelerometer.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
         sensorManager_Accelerometer.registerListener(this, sensor_Accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager_Accelerometer.registerListener(this, sensor_MAGNETIC_FIELD, SensorManager.SENSOR_DELAY_NORMAL);
+
         //sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_FASTEST);
         //sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_GAME);
         //sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_UI);
@@ -805,6 +831,7 @@ public class MainActivity extends AppCompatActivity implements
 
         // Listenerを解除
         sensorManager_Accelerometer.unregisterListener(this);
+
     }
 
     private void initScanCallback() {
@@ -900,18 +927,34 @@ public class MainActivity extends AppCompatActivity implements
             Log.i(TAG, "PATH:" + getFilesDir());
             //Log.i(TAG, "PATH:" + getExternalStorageDirectory());
             // Writing data +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            OutputStream out;
+
             try {
-                out = openFileOutput("out_put_"
-                        + String.valueOf(month)   + String.valueOf(day)  + String.valueOf(hour) + String.valueOf(minute)  + String.valueOf(second)
-                        + "beacon.txt",MODE_PRIVATE|MODE_APPEND);
-                PrintWriter writer = new PrintWriter(new OutputStreamWriter(out,"UTF-8"));
+                OutputStream out ;//= openFileOutput("out_put_beacon.txt",MODE_PRIVATE|MODE_APPEND);
+                PrintWriter writer ;//= new PrintWriter(new OutputStreamWriter(out,"UTF-8"));
 
                 //追記する ++++++
 
                 if(first_writing_flag==0){
+                    calendar = Calendar.getInstance();
+
+                    year = calendar.get(Calendar.YEAR);
+                    month = calendar.get(Calendar.MONTH);
+                    day = calendar.get(Calendar.DAY_OF_MONTH);
+                    hour = calendar.get(Calendar.HOUR_OF_DAY);
+                    minute = calendar.get(Calendar.MINUTE);
+                    second = calendar.get(Calendar.SECOND);
+
+                    data_text =  String.valueOf(year)  + String.format("%02d",month+1)   + String.format("%02d",day)  + String.format("%02d",hour) + String.format("%02d",minute)  + String.format("%02d",second);
+
+                    out = openFileOutput("out_put_"
+                            + data_text
+                            + "beacon.csv",MODE_PRIVATE|MODE_APPEND);
+                     writer = new PrintWriter(new OutputStreamWriter(out,"UTF-8"));
+
                     // first writing
-                    String write_value= "start_time" + " , "
+                    String write_value= "minor" + " , "
+                            + "major" + " , "
+                            + "start_time" + " , "
                             + "end_time" + ","
                             + "respons_time" + ","
                             + "Pre_start_time" + ","
@@ -921,39 +964,57 @@ public class MainActivity extends AppCompatActivity implements
                             + "sensorX_Accelerometer" + ","
                             + "sensorY_Accelerometer" + ","
                             + "sensorZ_Accelerometer" + ","
+                            + "sensorX_MAGNETIC_FIELD" + ","
+                            + "sensorY_MAGNETIC_FIELD" + ","
+                            + "sensorZ_MAGNETIC_FIELD" + ","
                             + "\n";
                     writer.append(write_value);
                     first_writing_flag = 1;
-                }else{
+                    writer.close();
+                    Toast.makeText(this, "name:" + data_text, Toast.LENGTH_LONG).show();
+                }else if(first_writing_flag==1){
                     // writing
-                    String write_value= String.valueOf(startTime_loop_out) + " , "
-                            + String.valueOf(stopTime_loop_out) + ","
-                            + String.valueOf(startTime_loop_out-stopTime_loop_out) + ","
-                            + String.valueOf(Pre_startTime) + " , "
-                            + String.valueOf(stopTime) + ","
-                            + String.valueOf(Pre_startTime-stopTime) + ","
-                            + String.valueOf(rssi)  + ","
-                            + String.valueOf(sensorX_Accelerometer)  + ","
-                            + String.valueOf(sensorY_Accelerometer)  + ","
-                            + String.valueOf(sensorZ_Accelerometer)  + ","
-                            + "\n";
-                    writer.append(write_value);
+                    //data_text =  String.valueOf(year)  + String.format("%02d",month+1)   + String.format("%02d",day)  + String.format("%02d",hour) + String.format("%02d",minute)  + String.format("%02d",second);
 
+                    out = openFileOutput("out_put_"
+                            + data_text
+                            + "beacon.csv",MODE_PRIVATE|MODE_APPEND);
+                    writer = new PrintWriter(new OutputStreamWriter(out,"UTF-8"));
+
+                    ((TextView)findViewById(id.spread_button)).setText("** WRITING **");
+                        String write_value = major + " , "
+                                + minor + " , "
+                                + String.valueOf(startTime_loop_out) + " , "
+                                + String.valueOf(stopTime_loop_out) + ","
+                                + String.valueOf(startTime_loop_out - stopTime_loop_out) + ","
+                                + String.valueOf(Pre_startTime) + " , "
+                                + String.valueOf(stopTime) + ","
+                                + String.valueOf(Pre_startTime - stopTime) + ","
+                                + String.valueOf(rssi) + ","
+                                + String.valueOf(sensorX_Accelerometer) + ","
+                                + String.valueOf(sensorY_Accelerometer) + ","
+                                + String.valueOf(sensorZ_Accelerometer) + ","
+                                + String.valueOf(sensorX_MAGNETIC_FIELD) + ","
+                                + String.valueOf(sensorY_MAGNETIC_FIELD) + ","
+                                + String.valueOf(sensorZ_MAGNETIC_FIELD) + ","
+                                + "\n";
+                        writer.append(write_value);
+                        writer.close();
                 }
                 //writer.append("write");
-                writer.close();
-                Log.i(TAG, " Writing Data  ");
+
+                //Log.i(TAG, " Writing Data  ");
             } catch (IOException e) {
                 // TODO 自動生成された catch ブロック
-                e.printStackTrace();
             }
             startTime_loop_out = System.currentTimeMillis();
 
             Target_number_TextView = (EditText) findViewById(id.target_Text);
             Target_number = Integer.parseInt(Target_number_TextView.getText().toString());// Int
             //if ((Integer.parseInt(major) == 700 || Integer.parseInt(minor) == 494) || (Integer.parseInt(major) == 6 && Integer.parseInt(minor) == 512) || (Integer.parseInt(major) == 512 && Integer.parseInt(minor) == 6) ) {
-            if (Integer.parseInt(major) == Target_number ) {
-            //if(true){
+            //if (Integer.parseInt(minor) < 1000 || Integer.parseInt(major) <1000 ) {
+            if(true){
+            //if (Integer.parseInt(minor) != 57526 || Integer.parseInt(minor) != 25178 ) {
                 // 距離の計算
                 beacon_distance = Math.pow(10,((-0-rssi)/20));
 
@@ -1546,7 +1607,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onSensorChanged(SensorEvent event) {
         //float sensorX_Accelerometer=0, sensorY_Accelerometer=0, sensorZ_Accelerometer=0;
         float sensorX_Accelerometer2, sensorY_Accelerometer2, sensorZ_Accelerometer2;
-
+        Log.d("MainActivity", "onSensorChanged");
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             sensorX_Accelerometer = event.values[0];
             sensorY_Accelerometer = event.values[1];
@@ -1556,12 +1617,31 @@ public class MainActivity extends AppCompatActivity implements
                     + " X: " + sensorX_Accelerometer + "\n"
                     + " Y: " + sensorY_Accelerometer + "\n"
                     + " Z: " + sensorZ_Accelerometer;
+            Log.d("MainActivity", "加速度センサー 2");
             textView_Accelerometer.setText(strTmp);
             //Log.i(TAG, "X: " + sensorX_Accelerometer2);
             //Log.i(TAG, "Y: " + sensorY_Accelerometer2);
             //Log.i(TAG, "Z: " + sensorZ_Accelerometer2);
             //showInfo(event);
         }
+
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            sensorX_MAGNETIC_FIELD = event.values[0];
+            sensorY_MAGNETIC_FIELD = event.values[1];
+            sensorZ_MAGNETIC_FIELD = event.values[2];
+
+            String strTmp = "磁気センサー 2\n"
+                    + " X: " + sensorX_MAGNETIC_FIELD + "\n"
+                    + " Y: " + sensorY_MAGNETIC_FIELD + "\n"
+                    + " Z: " + sensorZ_MAGNETIC_FIELD;
+            Log.d("MainActivity", "磁気センサー 2");
+            textView_MAGNETIC_FIELD.setText(strTmp);
+            //Log.i(TAG, "X: " + sensorX_MAGNETIC_FIELD2);
+            //Log.i(TAG, "Y: " + sensorY_MAGNETIC_FIELD2);
+            //Log.i(TAG, "Z: " + sensorZ_MAGNETIC_FIELD2);
+            //showInfo(event);
+        }
+
     }
 
 
@@ -1842,6 +1922,7 @@ public class MainActivity extends AppCompatActivity implements
          */
         public void putDataFromApi() throws IOException {
             String spreadsheetId = "1e02_BHu1UFczMyK3p7viq7PxE1GEoxt1qOxc11uFhW0";
+            //String spreadsheetId = "1uXbIPehZFJhxgffu2IB6ILLqn-hTBfCZKNV4rz-zC14";
             String range = "s1!A2:E2";
             ValueRange valueRange = new ValueRange();
             List row = new ArrayList<>();
@@ -1851,7 +1932,8 @@ public class MainActivity extends AppCompatActivity implements
             valueRange.setRange(range);
             this.mService.spreadsheets().values()
                     .update(spreadsheetId, range, valueRange)
-                    .setValueInputOption("RAW")//.setValueInputOption("USER_ENTERED")
+                    .setValueInputOption("RAW")
+                    // .setValueInputOption("USER_ENTERED")
                     .execute();
         }
 
@@ -1864,6 +1946,7 @@ public class MainActivity extends AppCompatActivity implements
          */
         private List<String> getDataFromApi() throws IOException {
             String spreadsheetId = "1e02_BHu1UFczMyK3p7viq7PxE1GEoxt1qOxc11uFhW0";
+            //String spreadsheetId = "1uXbIPehZFJhxgffu2IB6ILLqn-hTBfCZKNV4rz-zC14";
             String range = "s1!A1:E1";
             List<String> results = new ArrayList<String>();
             ValueRange response = this.mService.spreadsheets().values()
@@ -1921,6 +2004,39 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    public void onClickDatabase(View view) {
+
+        // ContentValuesに列名と値を設定
+        ContentValues values = new ContentValues();
+        values.put("name", "Taro");
+
+        try {
+            // データベースを書き込み用で開く
+            ClientsDbHelper dbHelper = new ClientsDbHelper(getApplicationContext());
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+            db.insert("clients", null, values); // 挿入先テーブルを指定して挿入
+            // ↑の場合、valuesが空だとinsert()が例外をスローする。
+            // これを防ぐには、次のようにnullColumnHackを指定する。
+            // db.insert("clients", "name", values);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void data_write(View view) {
+
+        if(first_writing_flag==-1) {
+            first_writing_flag = 0;
+            ((TextView)findViewById(id.spread_button)).setText("DATA SAVEING");
+        }
+
+        if(first_writing_flag==1){
+            first_writing_flag = -1;
+            ((TextView)findViewById(id.spread_button)).setText("FINISHED");
+        }
+
+    }
 
 
 
