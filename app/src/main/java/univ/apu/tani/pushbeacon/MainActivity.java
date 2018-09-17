@@ -84,11 +84,15 @@ import com.github.mikephil.charting.data.LineDataSet;
 
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -835,11 +839,11 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void initScanCallback() {
-        Log.i(TAG, "+++++++++++  initScanCallback() in funcution ;");
+        //Log.i(TAG, "+++++++++++  initScanCallback() in funcution ;");
         _scanCallback = new ScanCallback() {
             @Override
             public void onBatchScanResults(List<ScanResult> results) {
-                Log.i(TAG, " initScanCallback() - onBatchScanResults in funcution ;");
+                //Log.i(TAG, " initScanCallback() - onBatchScanResults in funcution ;");
                 super.onBatchScanResults(results);
                 for (ScanResult result : results) {
                     scanResult(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
@@ -848,14 +852,14 @@ public class MainActivity extends AppCompatActivity implements
 
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
-                Log.i(TAG, " initScanCallback() - onScanResult in funcution ;");
+                //Log.i(TAG, " initScanCallback() - onScanResult in funcution ;");
                 super.onScanResult(callbackType, result);
                 scanResult(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
             }
 
             @Override
             public void onScanFailed(int errorCode) {
-                Log.i(TAG, " initScanCallback() - onScanFailed in funcution ;");
+                //Log.i(TAG, " initScanCallback() - onScanFailed in funcution ;");
                 super.onScanFailed(errorCode);
             }
         };
@@ -863,7 +867,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void initLeScanCallback() {
-        Log.i(TAG, " initLeScanCallback() in funcution ;");
+        //Log.i(TAG, " initLeScanCallback() in funcution ;");
         _leScanCallback = new BluetoothAdapter.LeScanCallback() {
             @Override
             public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
@@ -894,8 +898,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void scanResult(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        Log.i(TAG, "> scanResult() in funcution ;");
-        Log.i(TAG, " ++ scanRecord.length = " + scanRecord .length);
+        //Log.i(TAG, "> scanResult() in funcution ;");
+        //Log.i(TAG, " ++ scanRecord.length = " + scanRecord .length);
         if (scanRecord.length > 30) {
 
             //if(beacon_flag == OFF){
@@ -903,9 +907,12 @@ public class MainActivity extends AppCompatActivity implements
 
             uuid = getUUID(scanRecord);
             major = getMajor(scanRecord);
+
             minor = getMinor(scanRecord);
             int_rssi = rssi;
 
+            if (Integer.parseInt(major) == 1 || Integer.parseInt(major) == 512) {
+                
             //デバッグ用 Toast 表示
             //Toast toast_re = Toast.makeText(MainActivity.this, uuid, Toast.LENGTH_LONG);
             //toast_re.show();
@@ -920,17 +927,20 @@ public class MainActivity extends AppCompatActivity implements
 
             // time section calc
             stopTime_loop_out = System.currentTimeMillis();
-            Log.i(TAG, "Time_loop_in:" + String.valueOf(startTime_loop_out)+ "  Time_loop_out:" +  String.valueOf(stopTime_loop_out) + " Interval:" + String.valueOf(startTime_loop_out-stopTime_loop_out));
+            //Log.i(TAG, "Time_loop_in:" + String.valueOf(startTime_loop_out)+ "  Time_loop_out:" +  String.valueOf(stopTime_loop_out) + " Interval:" + String.valueOf(startTime_loop_out-stopTime_loop_out));
 
             //File path = getFilesDir();
             //File path2 = getExternalStorageDirectory();
-            Log.i(TAG, "PATH:" + getFilesDir());
-            //Log.i(TAG, "PATH:" + getExternalStorageDirectory());
+            //Log.i(TAG, "PATH:" + getFilesDir());
+            //Log.i(TAG, "PATH:" + android.os.Environment.getExternalStorageDirectory().getPath() );
+            //String SDFile = android.os.Environment.getExternalStorageDirectory().getPath();
+                //Log.i(TAG, "PATH:" + getExternalStorageDirectory());
             // Writing data +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+                Log.i(TAG, " +++++++++++++++++++++++++++++++++ ");
             try {
                 OutputStream out ;//= openFileOutput("out_put_beacon.txt",MODE_PRIVATE|MODE_APPEND);
                 PrintWriter writer ;//= new PrintWriter(new OutputStreamWriter(out,"UTF-8"));
+                String SDFile = android.os.Environment.getExternalStorageDirectory().getPath() + "/memo2.txt";
 
                 //追記する ++++++
 
@@ -952,8 +962,8 @@ public class MainActivity extends AppCompatActivity implements
                      writer = new PrintWriter(new OutputStreamWriter(out,"UTF-8"));
 
                     // first writing
-                    String write_value= "minor" + " , "
-                            + "major" + " , "
+                    String write_value= "major" + " , "
+                            + "minor" + " , "
                             + "start_time" + " , "
                             + "end_time" + ","
                             + "respons_time" + ","
@@ -972,9 +982,11 @@ public class MainActivity extends AppCompatActivity implements
                     first_writing_flag = 1;
                     writer.close();
                     Toast.makeText(this, "name:" + data_text, Toast.LENGTH_LONG).show();
+
                 }else if(first_writing_flag==1){
                     // writing
                     //data_text =  String.valueOf(year)  + String.format("%02d",month+1)   + String.format("%02d",day)  + String.format("%02d",hour) + String.format("%02d",minute)  + String.format("%02d",second);
+                    Log.i(TAG, " Second write block ");
 
                     out = openFileOutput("out_put_"
                             + data_text
@@ -1000,12 +1012,37 @@ public class MainActivity extends AppCompatActivity implements
                                 + "\n";
                         writer.append(write_value);
                         writer.close();
+
+
+
+                         /*
+                    out = openFileOutput("storage/21D6-0B1B/out_put_"
+                            + data_text
+                            + "beacon.csv",MODE_PRIVATE|MODE_APPEND);
+                            */
+
+
+                    File file = new File(SDFile);
+
+                    FileOutputStream fos = new FileOutputStream(file,true);
+                    OutputStreamWriter osw = new OutputStreamWriter(fos,"UTF-8");
+                    PrintWriter pw = new PrintWriter(osw);
+
+                    String str = "tset_string" + "\n";
+                    pw.append(write_value);
+
+                    pw.close();
+                    osw.close();
+                    fos.close();
+
+                    Log.i(TAG, " DATA Writing : " + SDFile);
                 }
                 //writer.append("write");
 
                 //Log.i(TAG, " Writing Data  ");
             } catch (IOException e) {
                 // TODO 自動生成された catch ブロック
+                Log.i(TAG, " TODO 自動生成された catch ブロック ");
             }
             startTime_loop_out = System.currentTimeMillis();
 
@@ -1013,8 +1050,9 @@ public class MainActivity extends AppCompatActivity implements
             Target_number = Integer.parseInt(Target_number_TextView.getText().toString());// Int
             //if ((Integer.parseInt(major) == 700 || Integer.parseInt(minor) == 494) || (Integer.parseInt(major) == 6 && Integer.parseInt(minor) == 512) || (Integer.parseInt(major) == 512 && Integer.parseInt(minor) == 6) ) {
             //if (Integer.parseInt(minor) < 1000 || Integer.parseInt(major) <1000 ) {
-            if(true){
-            //if (Integer.parseInt(minor) != 57526 || Integer.parseInt(minor) != 25178 ) {
+            //if(true){
+            //if (Integer.parseInt(minor) != 57526 && Integer.parseInt(minor) != 25178  && Integer.parseInt(minor) != 51259 && Integer.parseInt(minor) != 20314 && Integer.parseInt(minor) != 0) {
+
                 // 距離の計算
                 beacon_distance = Math.pow(10,((-0-rssi)/20));
 
@@ -1275,7 +1313,7 @@ public class MainActivity extends AppCompatActivity implements
 
             // ※ここはUIスレッドではないので、実際画面に表示する場合は注意して下さい。
         }
-        Log.i(TAG, "Loop END POINT  ");
+        //Log.i(TAG, "Loop END POINT  ");
     }
 
     private String getUUID(byte[] scanRecord) {
@@ -1607,7 +1645,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onSensorChanged(SensorEvent event) {
         //float sensorX_Accelerometer=0, sensorY_Accelerometer=0, sensorZ_Accelerometer=0;
         float sensorX_Accelerometer2, sensorY_Accelerometer2, sensorZ_Accelerometer2;
-        Log.d("MainActivity", "onSensorChanged");
+        //Log.d("MainActivity", "onSensorChanged");
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             sensorX_Accelerometer = event.values[0];
             sensorY_Accelerometer = event.values[1];
@@ -1617,7 +1655,7 @@ public class MainActivity extends AppCompatActivity implements
                     + " X: " + sensorX_Accelerometer + "\n"
                     + " Y: " + sensorY_Accelerometer + "\n"
                     + " Z: " + sensorZ_Accelerometer;
-            Log.d("MainActivity", "加速度センサー 2");
+            //Log.d("MainActivity", "加速度センサー 2");
             textView_Accelerometer.setText(strTmp);
             //Log.i(TAG, "X: " + sensorX_Accelerometer2);
             //Log.i(TAG, "Y: " + sensorY_Accelerometer2);
@@ -1634,7 +1672,7 @@ public class MainActivity extends AppCompatActivity implements
                     + " X: " + sensorX_MAGNETIC_FIELD + "\n"
                     + " Y: " + sensorY_MAGNETIC_FIELD + "\n"
                     + " Z: " + sensorZ_MAGNETIC_FIELD;
-            Log.d("MainActivity", "磁気センサー 2");
+            //Log.d("MainActivity", "磁気センサー 2");
             textView_MAGNETIC_FIELD.setText(strTmp);
             //Log.i(TAG, "X: " + sensorX_MAGNETIC_FIELD2);
             //Log.i(TAG, "Y: " + sensorY_MAGNETIC_FIELD2);
@@ -2037,6 +2075,8 @@ public class MainActivity extends AppCompatActivity implements
         }
 
     }
+
+
 
 
 
